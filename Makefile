@@ -12,3 +12,29 @@ all: sblkdev
 
 sblkdev:
 	make -C $(KERNELDIR) M=$(PWD) modules
+
+insmod:
+	sudo insmod $(MODULE_NAME).ko
+	sudo mknod  /dev/sblkdev b 252 0
+	sudo chmod 777 /dev/sblkdev
+	sudo mkdir mnt
+	sudo mkfs.ext2 /dev/sblkdev
+	sudo mount /dev/sblkdev ./mnt
+	sudo chmod 777 ./mnt
+
+reinsmod:
+	sudo rmmod $(MODULE_NAME)
+	sudo insmod $(MODULE_NAME).ko
+
+rmmod:
+	sudo umount mnt/
+	sudo rm -r mnt/
+	sudo rmmod $(MODULE_NAME)
+	sudo rm /dev/sblkdev*
+
+test:
+	echo "aaaaaaaaaa" > mnt/t.txt
+	cat mnt/t.txt
+	echo "ls -al ./mnt" > mnt/t.sh
+	sudo chmod +x mnt/t.sh
+	./mnt/t.sh

@@ -23,7 +23,7 @@
 
 // constants - instead defines
 static const char* _sblkdev_name = "sblkdev";
-static const size_t _sblkdev_buffer_size = 16 * PAGE_SIZE;
+static const size_t _sblkdev_buffer_size = 1024 * PAGE_SIZE;
 
 // types
 typedef struct sblkdev_cmd_s
@@ -53,8 +53,11 @@ static sblkdev_device_t* _sblkdev_device = NULL;
 // functions
 static int sblkdev_allocate_buffer(sblkdev_device_t* dev)
 {
+    pr_info("%s PAGE_SIZE = 0x%llx \n", __func__, PAGE_SIZE);
     dev->capacity = _sblkdev_buffer_size >> SECTOR_SHIFT;
-    dev->data = kmalloc(dev->capacity << SECTOR_SHIFT, GFP_KERNEL); //
+    // dev->data = kmalloc(dev->capacity << SECTOR_SHIFT, GFP_KERNEL); /
+    dev->data = vmalloc(dev->capacity << SECTOR_SHIFT);
+    pr_info("%s allocate_buffer 0x%llx  0x%llx\n", __func__, dev->capacity,dev->capacity << SECTOR_SHIFT);
     if (dev->data == NULL) {
         printk(KERN_WARNING "sblkdev: vmalloc failure.\n");
         return -ENOMEM;
@@ -66,7 +69,7 @@ static int sblkdev_allocate_buffer(sblkdev_device_t* dev)
 static void sblkdev_free_buffer(sblkdev_device_t* dev)
 {
     if (dev->data) {
-        kfree(dev->data);
+        vfree(dev->data);
 
         dev->data = NULL;
         dev->capacity = 0;
@@ -112,7 +115,7 @@ static int do_simple_request(struct request *rq, unsigned int *nr_bytes)
     loff_t pos = blk_rq_pos(rq) << SECTOR_SHIFT;
     loff_t dev_size = (loff_t)(dev->capacity << SECTOR_SHIFT);
 
-    printk(KERN_WARNING "sblkdev: request start from sector %ld \n", blk_rq_pos(rq));
+    printk(KERN_WARNING "sblkdev: request start from sector %lld \n", blk_rq_pos(rq));
     
     rq_for_each_segment(bvec, rq, iter)
     {
@@ -369,6 +372,7 @@ static int __init sblkdev_init(void)
     int ret = SUCCESS;
 
     _sblkdev_major = register_blkdev(_sblkdev_major, _sblkdev_name);
+    pr_info ("%s  _sblkdev_major %d\n", __func__, _sblkdev_major);
     if (_sblkdev_major <= 0){
         printk(KERN_WARNING "sblkdev: unable to get major number\n");
         return -EBUSY;

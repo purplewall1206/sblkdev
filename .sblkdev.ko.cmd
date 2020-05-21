@@ -1,0 +1,1 @@
+cmd_/home/ppw/Documents/LKM-practice/sblkdev/sblkdev.ko := ld -r -m elf_x86_64  -z max-page-size=0x200000  --build-id  -T ./scripts/module-common.lds -o /home/ppw/Documents/LKM-practice/sblkdev/sblkdev.ko /home/ppw/Documents/LKM-practice/sblkdev/sblkdev.o /home/ppw/Documents/LKM-practice/sblkdev/sblkdev.mod.o;  true
